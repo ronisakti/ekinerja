@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dokumen E-Kinerja</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #1e1e1e;
+            color: #f0f0f0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            position: relative;
+        }
+        h1 {
+            text-align: center;
+            color: #ffffff;
+        }
+        .nav-container, .welcome-container {
+            text-align: center;
+            margin-bottom: 20px;
+            width: 100%;
+            max-width: 600px;
+            margin: auto;
+        }
+        .nav-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        input, select, button {
+            margin: 5px;
+            padding: 10px;
+            background-color: #2a2a2a;
+            color: #f0f0f0;
+            border: 1px solid #444;
+            border-radius: 5px;
+            flex: 1;
+        }
+        button {
+            cursor: pointer;
+            background-color: #007BFF;
+        }
+        button:hover {
+            background-color: #444;
+        }
+        .pdf-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            overflow: auto;
+        }
+        .home-button {
+            display: block;
+            margin-left: auto;
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            flex: 0 0 auto;
+        }
+        .home-button:hover {
+            background-color: #0056b3;
+        }
+        .notification {
+            color: #ff0000;
+            margin-top: 10px;
+        }
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 1.5em;
+            }
+            button {
+                font-size: 0.9em;
+            }
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        td {
+            padding: 8px;
+            border: 1px solid #ddd;
+        }
+        strong {
+            text-align: left;
+            width: 70px;
+            display: inline-block;
+        }
+    </style>
+    <script>
+        function showWelcomeScreen() {
+            document.getElementById('welcomeScreen').style.display = 'block';
+            document.getElementById('documentSelection').style.display = 'none';
+            document.getElementById('pdfViewer').style.display = 'none';
+        }
+
+        function proceedToSelection() {
+            document.getElementById('welcomeScreen').style.display = 'none';
+            document.getElementById('documentSelection').style.display = 'block';
+            document.getElementById('pdfViewer').style.display = 'block';
+            document.getElementById('notification').innerText = '';
+        }
+
+        function isLeapYear(year) {
+            return (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
+        }
+
+        function getDaysInMonth(year, month) {
+            const daysInMonth = [31, isLeapYear(year) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+            return daysInMonth[month - 1];
+        }
+
+function loadPDF(pdfName, month, page = 1) {
+    const basePath = `https://friza0.github.io/fahrul.ariza.ekinerja.github.io/pdfs/${month}`;
+    const pdfViewer = document.getElementById('pdfViewer');
+    const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+
+    if (isMobile) {
+        // Gunakan Google Docs Viewer untuk browser mobile
+        const googleDocsUrl = `https://docs.google.com/gview?embedded=true&url=${basePath}/${pdfName}&page=${page}`;
+        pdfViewer.src = googleDocsUrl;
+    } else {
+        // Muat PDF langsung dalam iframe untuk desktop
+        pdfViewer.src = `${basePath}/${pdfName}#page=${page}`;
+    }
+
+    // Perbarui URL dengan parameter bulan, hari, dan halaman
+    updateURL(month, pdfName, page);
+
+    setTimeout(() => {
+        const expectedPdfNames = Array.from({ length: getDaysInMonth(2024, month) }, (_, i) => 
+            `ekinerja-2024-${month}-${String(i + 1).padStart(2, '0')}.pdf`
+        );
+
+        const notification = document.getElementById('notification');
+        if (expectedPdfNames.includes(pdfName)) {
+            notification.innerText = '';
+        } else {
+            notification.innerText = 'File tidak ditemukan';
+            pdfViewer.src = 'https://www.facebook.com/';
+        }
+    }, 1000);
+}
+
+        function updateDays(month) {
+            const daySelect = document.getElementById('daySelect');
+            daySelect.innerHTML = '';
+
+            const year = 2024;
+            const daysInMonth = getDaysInMonth(year, parseInt(month));
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayString = day.toString().padStart(2, '0');
+                const pdfName = `ekinerja-${year}-${month}-${dayString}.pdf`;
+
+                const option = document.createElement('option');
+                option.value = pdfName;
+                option.textContent = `Dokumen ${dayString} ${getMonthName(month)} ${year}`;
+                daySelect.appendChild(option);
+            }
+        }
+
+        function getMonthName(month) {
+            const monthNames = [
+                "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+                "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+            ];
+            return monthNames[parseInt(month) - 1];
+        }
+
+function loadSelectedPDF() {
+    const monthSelect = document.getElementById('monthSelect');
+    const daySelect = document.getElementById('daySelect');
+    const pageInput = document.getElementById('pageInput');
+
+    if (monthSelect.value && daySelect.value) {
+        const page = pageInput.value || 1;
+        loadPDF(daySelect.value, monthSelect.value, page); // Panggil fungsi loadPDF dan perbarui URL
+    }
+}
+
+function updateURL(month, pdfName, page = 1) {
+    // Ambil hari dari nama file PDF
+    const dayMatch = pdfName.match(/(\d{2})(?=\..*pdf$)/);
+    const day = dayMatch ? dayMatch[0] : '01'; // Jika tidak ditemukan, gunakan hari default '01'
+    
+    // Buat URL baru dengan parameter month, day, dan page
+    const newUrl = `${window.location.pathname}?month=${month}&day=${day}&page=${page}`;
+    
+    // Perbarui URL di browser tanpa reload halaman
+    window.history.replaceState({}, '', newUrl);
+}
+
+
+        function loadFromURL() {
+            const params = new URLSearchParams(window.location.search);
+            const month = params.get('month');
+            const day = params.get('day');
+            const page = params.get('page') || 1;
+
+            if (month && day) {
+                const pdfName = `ekinerja-2024-${month}-${day}.pdf`;
+                document.getElementById('daySelect').value = pdfName;
+                loadPDF(pdfName, month, page);
+                document.getElementById('monthSelect').value = month;
+                updateDays(month);
+                document.getElementById('pageInput').value = page;
+                document.getElementById('welcomeScreen').style.display = 'none';
+                document.getElementById('documentSelection').style.display = 'block';
+            } else {
+                showWelcomeScreen();
+            }
+        }
+
+function copyLink() {
+    const monthSelect = document.getElementById('monthSelect');
+    const daySelect = document.getElementById('daySelect');
+    const pageInput = document.getElementById('pageInput');
+
+    if (monthSelect.value && daySelect.value) {
+        const month = monthSelect.value;
+        // Ambil hari dari nama file dengan regex yang lebih spesifik
+        const dayMatch = daySelect.value.match(/-(\d{2})\.pdf$/);
+        const day = dayMatch ? dayMatch[1] : '01'; // Gunakan fallback ke '01' jika tidak ditemukan
+        const page = pageInput.value || 1;
+
+        // Buat URL yang diperbarui
+        const link = `${window.location.origin}${window.location.pathname}?month=${month}&day=${day}&page=${page}`;
+
+        // Salin link ke clipboard
+        const dummy = document.createElement('input');
+        document.body.appendChild(dummy);
+        dummy.value = link;
+        dummy.select();
+        document.execCommand('copy');
+        document.body.removeChild(dummy);
+
+        alert('Link telah disalin! Link akan membuka dokumen untuk tanggal yang dipilih.');
+    } else {
+        alert('Silakan pilih bulan dan dokumen terlebih dahulu.');
+    }
+}
+
+
+        function handlePaste(event) {
+            const pasteData = event.clipboardData.getData('text');
+            const urlParams = new URLSearchParams(pasteData.split('?')[1]);
+            const month = urlParams.get('month');
+            const day = urlParams.get('day');
+            const page = urlParams.get('page') || 1;
+
+            if (month && day) {
+                const pdfName = `ekinerja-2024-${month}-${day}.pdf`;
+                document.getElementById('monthSelect').value = month;
+                const daySelect = document.getElementById('daySelect');
+                daySelect.value = pdfName;
+                document.getElementById('pageInput').value = page;
+                loadPDF(pdfName, month, page);
+            }
+        }
+
+        function detectDevice() {
+            const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+            const welcomeScreen = document.getElementById('welcomeScreen');
+            
+            if (isMobile) {
+                welcomeScreen.innerHTML += "<p>Anda menggunakan perangkat mobile.</p>";
+            } else {
+                welcomeScreen.innerHTML += "<p>Anda menggunakan perangkat desktop.</p>";
+            }
+        }
+
+        window.onload = function() {
+            loadFromURL();
+            detectDevice();
+        };
+        window.addEventListener('paste', handlePaste);
+    </script>
+</head>
+<body>
+    <div id="welcomeScreen" class="welcome-container">
+        <center><h1>Dokumentasi E-Kinerja</h1></center>
+        <p>Selamat datang di sistem dokumen E-Kinerja.<br>
+        Silakan pilih bulan dan dokumen yang ingin Anda lihat.</p>
+        <h3>Identitas</h3>
+        <table>
+            <tr>
+                <td><strong>NAMA</strong></td>
+                <td>Roni</td>
+            </tr>
+            <tr>
+                <td><strong>NIP</strong></td>
+                <td>199510012022031002</td>
+            </tr>
+            <tr>
+                <td><strong>JABATAN</strong></td>
+                <td>Perawat Terampil</td>
+            </tr>
+            <tr>
+                <td><strong>Unit</strong></td>
+                <td>UPTD Puskesmas Rantau Pulut I</td>
+            </tr>
+        </table>
+        <button class="home-button" onclick="proceedToSelection()">Pilih Dokumen</button>
+    </div>
+
+<div id="documentSelection" class="nav-container" style="display: none;">
+    <select id="monthSelect" onchange="updateDays(this.value)">
+        <option value="">Pilih Bulan</option>
+        <option value="01">Januari</option>
+        <option value="02">Februari</option>
+        <option value="03">Maret</option>
+        <option value="04">April</option>
+        <option value="05">Mei</option>
+        <option value="06">Juni</option>
+        <option value="07">Juli</option>
+        <option value="08">Agustus</option>
+        <option value="09">September</option>
+        <option value="10">Oktober</option>
+        <option value="11">November</option>
+        <option value="12">Desember</option>
+    </select>
+
+    <select id="daySelect"></select>
+
+    <input id="pageInput" type="number" placeholder="Halaman" min="1">
+
+    <button onclick="loadSelectedPDF()">Tampilkan PDF</button>
+    <button onclick="copyLink()">Salin Link</button>
+
+</div>
+
+
+    <div id="notification" class="notification"></div>
+
+    <div class="pdf-container">
+        <iframe id="pdfViewer"></iframe>
+    </div>
+    <br>
+     <button class="home-button" onclick="window.location.href='index.html'">Halaman Utama</button>   
+</body>
+</html>
